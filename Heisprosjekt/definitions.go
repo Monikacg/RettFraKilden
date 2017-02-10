@@ -28,6 +28,18 @@ const (
   DIRN_STOP = 0
   DIRN_UP = 1
 
+  type button struct { // Brukes på button_outside_chan
+    direction string
+    floor int
+  }
+
+  type order struct { // Brukes på local_order_chan
+    cat string // "LIGHT"/"DIR"
+    order string  // DIRN_DOWN/UP/STOP, BUTTON_CALL_UP/DOWN/COMMAND
+    floor int //0-3 (0-N_FLOORS)
+    value int // ON/OFF for lys, settes bare for "LIGHT"
+  } // Floor trengs ikke på doorlight, value trengs ikke på retn.
+
   ON = 1
   OFF = 0
 )

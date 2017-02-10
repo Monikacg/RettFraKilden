@@ -25,8 +25,8 @@ func main() {
 	adm_receive_chan := make(chan int, 100)
 	peer_chan := make(chan int, 100)
 
-	start_timer_chan := make(chan int, 100)
-	time_out_chan := make(chan int, 100)
+	start_timer_chan := make(chan string, 100)
+	time_out_chan := make(chan string, 100)
 
 	driver.Elev_init()
 
@@ -38,4 +38,6 @@ func main() {
 	go admin.adm_init(button_inside_chan, button_outside_chan, floor_sensor_chan,
 		local_order_chan, adm_transmitt_chan, adm_receive_chan, peer_chan,
 		start_timer_chan, time_out_chan)
+
+	go timer.timer_init(start_timer_chan, time_out_chan)
 }
