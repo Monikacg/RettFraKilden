@@ -1,4 +1,4 @@
-package main
+package calculate_order
 
 /*
 Admin kaller funksjonen calculate_order for å finne ut hva heisen skal gjøre nå.
