@@ -35,7 +35,7 @@ func checking_for_orders_from_admin(local_order_chan <-chan order)  { // Nytt na
             driver.Elev_set_button_lamp(msg.order, msg.floor, msg.value)
           }
         } else if msg.cat == "DIR" {
-          if msg.order == "DIRN_STOP" {
+          if msg.order == DIRN_STOP {
             driver.Elev_set_motor_direction(DIRN_STOP)
             driver.Elev_set_door_open_lamp(ON)
           } else {
@@ -59,10 +59,10 @@ func isanythinghappening(button_inside_chan chan<- int, floor_sensor_chan chan<-
 func outside_button_pressed(button_outside_chan chan<- button) int {
   for floor := 0; floor < N_FLOORS; floor++ {
     if driver.Elev_get_button_signal(BUTTON_CALL_UP, floor) {
-      button_outside_chan <- button{"U",floor}
+      button_outside_chan <- button{floor, BUTTON_CALL_UP}
     }
     if driver.Elev_get_button_signal(BUTTON_CALL_DOWN, floor) {
-      button_outside_chan <- button{"D",floor}
+      button_outside_chan <- button{floor, BUTTON_CALL_DOWN}
     }
   }
 }
@@ -82,3 +82,5 @@ func floor_sensor_triggered(floor_sensor_chan chan<- int)  {
     floor_sensor_chan <- floor
   }
 }
+
+// NB: Wg.Wait() kan være mulighet/nødvendig en eller annen plass.

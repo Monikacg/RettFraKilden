@@ -7,11 +7,11 @@ import (
   //"fmt" Bare for test
 )
 
-func timer_init(start_timer_chan <-chan string, time_out_chan chan<- string, interrupt_timer_chan chan<- string)  {
+func Timer_init(start_timer_chan <-chan string, time_out_chan chan<- string, interrupt_timer_chan <-chan string)  {
   go timer(start_timer_chan, time_out_chan, interrupt_timer_chan) // Trengs egentlig "go" her? allerede kalt som goroutine fra main
 }
 
-func timer(start_timer_chan <-chan string, time_out_chan chan<- string, interrupt_timer_chan chan<- string)  {
+func timer(start_timer_chan <-chan string, time_out_chan chan<- string, interrupt_timer_chan <-chan string)  {
 
   for {
     select {
@@ -36,7 +36,7 @@ func door_open_timer(time_out_chan chan<- string)  {
   }
 }
 
-func udp_timer(time_out_chan chan<- string, interrupt_timer_chan chan<- string)  { //Må testes på nytt
+func udp_timer(time_out_chan chan<- string, interrupt_timer_chan <-chan string)  { //Må testes på nytt
   udp_time_out := time.NewTimer(100*time.Millisecond).C // Skal være lengre
   for {
     select {
