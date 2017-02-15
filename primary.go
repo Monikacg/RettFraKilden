@@ -34,6 +34,7 @@ func main()  {
 }
 
 func start_backup()  {
+    /*
   cmd := "\"Tell Application 'Terminal' to do script go run backup.go\""
   //out, err := exec.Command("osascript","-e",cmd).Output() //do script go run backup.go
   //if err != nil {
@@ -41,9 +42,15 @@ func start_backup()  {
   //}
   //fmt.Printf("%s", out)
   err2 := exec.Command("osascript","-e",cmd).Start()
-  
+
   if err2 != nil {
     fmt.Printf("%s", err2)
+  }
+  */
+  cmd := exec.Command("gnome-terminal","-x","go", "run", "backup.go") //"sh","-c",
+  err := cmd.Run()
+  if err != nil {
+      fmt.Printf("%s", err)
   }
 }
 
