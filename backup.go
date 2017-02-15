@@ -17,6 +17,7 @@ func main()  {
 
   fmt.Println("I am backup")
 
+  // Ta bort etter test
   select {
   case message := <- in:
     counter, _ = strconv.Atoi(message)
@@ -29,16 +30,16 @@ func main()  {
     select {
     case message := <- in:
       counter, _ = strconv.Atoi(message)
+  case <- time.After(5*time.Second):
+    fmt.Println("Assumes primary is dead.")
+    start_primary(counter)
     }
-    case <- time.After(5*time.Second):
-      fmt.Println("Assumes primary is dead.")
-      start_primary()
   }
 
 }
 
-func listen(in <-chan string)  {
-  laddr, _ := net.ResolveUDPAddr("udp4", fmt.Sprintf(":", 44004))
+func listen(in chan<- string)  {
+  laddr, _ := net.ResolveUDPAddr("udp4", fmt.Sprintf(":%d", 44004))
   conn, _ := net.ListenUDP("udp4", laddr)
   for {
     buf := make([]byte, 1024)
@@ -47,10 +48,14 @@ func listen(in <-chan string)  {
   }
 }
 
-func start_primary()  {
-  arg := fmt.Sprintf("go run primary.go ‰d", counter)
-  full_arg := "\"Tell Application 'Terminal' to do script "
-  full_arg += arg + "\""
-  cmd := exec.Command("osascript","-e",full_arg)
-  _ := cmd.Run()
+func start_primary(counter int)  {
+  // arg := fmt.Sprintf("go", "run", "primary.go", "‰d", counter) Fungerer ikke
+  //full_arg := "\"Tell Application 'Terminal' to do script "
+  //full_arg += arg + "\""
+  s_counter := strconv.Itoa(counter)
+  cmd := exec.Command("gnome-terminal","-x","go", "run", "primary.go", s_counter)//"sh","-c",
+  err := cmd.Run()
+  if err != nil {
+    fmt.Printf("%s", err)
+  }
 }
