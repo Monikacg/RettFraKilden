@@ -7,11 +7,11 @@ import (
   //"fmt" Bare for test
 )
 
-func Timer_init(start_timer_chan <-chan string, time_out_chan chan<- string, interrupt_timer_chan <-chan string)  {
-  go timer(start_timer_chan, time_out_chan, interrupt_timer_chan) // Trengs egentlig "go" her? allerede kalt som goroutine fra main
-}
+func Timer_init(start_timer_chan <-chan string, time_out_chan chan<- string)  { //, interrupt_timer_chan <-chan string
+  go timer(start_timer_chan, time_out_chan) // Trengs egentlig "go" her? allerede kalt som goroutine fra main
+} //, interrupt_timer_chan
 
-func timer(start_timer_chan <-chan string, time_out_chan chan<- string, interrupt_timer_chan <-chan string)  {
+func timer(start_timer_chan <-chan string, time_out_chan chan<- string)  { //, interrupt_timer_chan <-chan string
 
   for {
     select {
@@ -20,7 +20,7 @@ func timer(start_timer_chan <-chan string, time_out_chan chan<- string, interrup
         go door_open_timer(time_out_chan)
       }
       if start_msg == "UDP" {
-        go udp_timer(time_out_chan, interrupt_timer_chan)
+        go udp_timer(time_out_chan) //, interrupt_timer_chan
       }
     }
   }
@@ -36,15 +36,15 @@ func door_open_timer(time_out_chan chan<- string)  {
   }
 }
 
-func udp_timer(time_out_chan chan<- string, interrupt_timer_chan <-chan string)  { //Må testes på nytt
+func udp_timer(time_out_chan chan<- string)  { //Må testes på nytt //, interrupt_timer_chan <-chan string
   udp_time_out := time.NewTimer(100*time.Millisecond).C // Skal være lengre
   for {
     select {
     case <- udp_time_out:
       time_out_chan <- "UDP"
       return
-    case <- interrupt_timer_chan:
-      return
+    //case <- interrupt_timer_chan:
+      //return
     }
   }
 }

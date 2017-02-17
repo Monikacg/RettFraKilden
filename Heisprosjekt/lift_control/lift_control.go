@@ -34,7 +34,7 @@ func checking_for_orders_from_admin(local_order_chan <-chan order)  { // Nytt na
           } else {
             driver.Elev_set_button_lamp(msg.order, msg.floor, msg.value)
           }
-        } else if msg.cat == "DIR" {
+        } else if msg.cat == "DIRN" {
           if msg.order == DIRN_STOP {
             driver.Elev_set_motor_direction(DIRN_STOP)
             driver.Elev_set_door_open_lamp(ON)
