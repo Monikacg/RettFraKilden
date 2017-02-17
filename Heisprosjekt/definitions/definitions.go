@@ -29,13 +29,14 @@ const (
   DIRN_STOP = 0
   DIRN_UP = 1
 
+  NOT_VALID = -2
 
   ON = 1
   OFF = 0
 )
 
 type Button struct { // Brukes på button_outside_chan. Kanskje endre til å bruke DIRN_UP og DIRN_DOWN?
-  floor int
+  floor int // Kan kutte ned til 1 button channel.
   button_dir int
 }
 
@@ -47,15 +48,16 @@ type Order struct { // Brukes på local_order_chan
 } // Floor trengs ikke på doorlight, value trengs ikke på retn.
 
 type Properties_struct struct { // Brukes i get_properties. ENDRE NAVN!
-  last_floor int
-  dirn int
-  state int
+  Last_floor int
+  Dirn int
+  State int
 }
 
 type Udp struct {
   id int
   message string
-  Properties_struct
+  info string
+  Order
 }
 
 // NB! GÅ gjennom og endre til stor bokstav i koden også.
