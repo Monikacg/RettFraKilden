@@ -31,6 +31,14 @@ func Get_properties(properties []int, lift int) (Properties_struct) {
 } // Tror ikke den her trengs/skal brukes. Sender hel tabell når slår opp.
 // Alternativet er å oppdatere en struct hele tiden i tillegg.
 
-func Get_state(properties []int, lift int) int {
+func Get_last_floor(properties []int, lift int) int { // I calculate_order
+  return properties[3*lift]
+}
+
+func Get_dirn(properties []int, lift int) int { // I calculate_order
+  return properties[3*lift+1]
+}
+
+func Get_state(properties []int, lift int) int { // I admin, calculate_order
   return properties[3*lift+2]
 }
