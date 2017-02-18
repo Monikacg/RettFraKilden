@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"./driver"
-	"./lift_control"
-	"./network"
-	"./admin"
+	. "driver"
+	. "lift_control"
+	. "network"
+	. "admin"
+	. "timer"
 )
 
 func main() {
@@ -16,7 +17,7 @@ func main() {
 
 	local_order_chan := make(chan order, 100)
 
-	adm_transmitt_chan := make(chan int, 100)
+	adm_transmit_chan := make(chan int, 100)
 	adm_receive_chan := make(chan int, 100)
 	peer_chan := make(chan int, 100)
 
@@ -24,16 +25,16 @@ func main() {
 	time_out_chan := make(chan string, 100)
 	interrupt_timer_chan := make(chan string, 100)
 
-	driver.Elev_init()
+	Elev_init()
 
-	go lift_control.Lift_control_init(button_inside_chan, button_outside_chan,
+	go Lift_control_init(button_inside_chan, button_outside_chan,
 		floor_sensor_chan, local_order_chan)
 
-	go network.Network_init(adm_transmitt_chan, adm_receive_chan, peer_chan)
+	go Network_init(adm_transmit_chan, adm_receive_chan, peer_chan)
 
-	go admin.Adm_init(button_inside_chan, button_outside_chan, floor_sensor_chan,
-		local_order_chan, adm_transmitt_chan, adm_receive_chan, peer_chan,
-		start_timer_chan, time_out_chan, interrupt_timer_chan)
+	go Admin_init(button_inside_chan, button_outside_chan, floor_sensor_chan,
+		local_order_chan, adm_transmit_chan, adm_receive_chan, peer_chan,
+		start_timer_chan, time_out_chan)
 
-	go timer.Timer_init(start_timer_chan, time_out_chan, interrupt_timer_chan)
+	go Timer_init(start_timer_chan, time_out_chan)
 }

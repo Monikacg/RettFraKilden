@@ -14,4 +14,7 @@ Sjekk om skal stopp hver gang noen
 
 _test.go filer virker flotte for å finne feil i kode! Også feil i
 løkker osv. Bør (antageligvis) gjøre det på den andre måten også
-for å se hva som blir printet ut etter korrekthet er sjekket. 
+for å se hva som blir printet ut etter korrekthet er sjekket.
+
+- Endre alle ID og lift til noe av det samme. Liker ID, men sier kanskje ikke nok.
+lift_ID?
