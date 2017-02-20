@@ -36,15 +36,15 @@ const (
 )
 
 type Button struct { // Brukes på button_outside_chan. Kanskje endre til å bruke DIRN_UP og DIRN_DOWN?
-  floor int // Kan kutte ned til 1 button channel.
-  button_dir int
+  Floor int // Kan kutte ned til 1 button channel.
+  Button_dir int
 }
 
 type Order struct { // Brukes på local_order_chan
-  cat string // "LIGHT"/"DIR"
-  order int  // DIRN_DOWN/UP/STOP, BUTTON_CALL_UP/DOWN/COMMAND
-  floor int //0-3 (0-N_FLOORS)
-  value int // ON/OFF for lys, settes bare for "LIGHT"
+  Cat string // "LIGHT"/"DIR"
+  Order int  // DIRN_DOWN/UP/STOP, BUTTON_CALL_UP/DOWN/COMMAND
+  Floor int //0-3 (0-N_FLOORS)
+  Value int // ON/OFF for lys, settes bare for "LIGHT"
 } // Floor trengs ikke på doorlight, value trengs ikke på retn.
 
 type Properties_struct struct { // Brukes i get_properties. ENDRE NAVN!

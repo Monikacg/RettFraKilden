@@ -14,10 +14,17 @@ serializing
 oppdater listen over heiser som er ilive :)
 */
 
+//Heismodul (alle deler minus denne .go-filen) laget av github.com/klasbo.
+
 type Udp struct {
 	id int
 	message string
 	properties_struct
+}
+
+type HelloMsg struct {
+	Message string
+	Iter    int
 }
 
 func Network_init(adm_transmitt_chan <-chan udp, adm_receive_chan chan<- udp, peer_chan chan<- int){
@@ -74,8 +81,6 @@ func main() {
 		case a := <-helloRx:
 			fmt.Printf("Received: %#v\n", a)
 		}
-		time.Sleep(1 * time.Second)
+		//time.Sleep(1 * time.Second)
 	}
-	/////////////////////////////////////////////////////////////////////////////////////////////
-
 }

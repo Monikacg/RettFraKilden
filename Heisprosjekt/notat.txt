@@ -18,3 +18,5 @@ for å se hva som blir printet ut etter korrekthet er sjekket.
 
 - Endre alle ID og lift til noe av det samme. Liker ID, men sier kanskje ikke nok.
 lift_ID?
+
+- NOTE TO SELF: Går det bra med både ytre og indre knapper på samme kanal (test på ekte heis)?

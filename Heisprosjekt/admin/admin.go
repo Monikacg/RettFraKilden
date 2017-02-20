@@ -10,16 +10,16 @@ import (
 
 // Mulig å slå sammen som interface{}?
 
-func Admin_init(button_inside_chan <-chan int, button_outside_chan <-chan button, floor_sensor_chan <-chan int,
+func Admin_init(button_chan <-chan Button, floor_sensor_chan <-chan int,
   local_order_chan chan<- order, adm_transmit_chan chan<- udp, adm_receive_chan chan<- udp, peer_chan <-chan int,
   start_timer_chan chan<- string, time_out_chan <-chan string)  {
 
-  go admin(button_inside_chan, button_outside_chan, floor_sensor_chan,
+  go admin(button_chan, floor_sensor_chan,
 		local_order_chan, adm_transmit_chan, adm_receive_chan, peer_chan,
 		start_timer_chan, time_out_chan)
 }
 
-func admin(button_inside_chan <-chan int, button_outside_chan <-chan button, floor_sensor_chan <-chan int,
+func admin(button_chan <-chan Button, floor_sensor_chan <-chan int,
   local_order_chan chan<- order, adm_transmit_chan chan<- udp, adm_receive_chan chan<- udp, peer_chan <-chan int,
   start_timer_chan chan<- string, time_out_chan <-chan string)  {
 
@@ -32,22 +32,21 @@ func admin(button_inside_chan <-chan int, button_outside_chan <-chan button, flo
 
   for {
     select {
-    case bi := <- button_inside_chan:
-      Add_order(orders, bi, ID, BUTTON_COMMAND)
-      //Send melding ut til NW på adm_transmit_chan
-      if Get_state(properties, ID) == IDLE {
-        find_new_order(orders, ID, properties, alive_lifts, start_timer_chan, local_order_chan, adm_transmit_chan)
-      } // Problem med å sende melding om button pressed ut på nettet og deretter melding fra find_new_order?
+      // Problem med å sende melding om button pressed ut på nettet og deretter melding fra find_new_order?
       // evt legge ved hvilke ordre vi tar hver gang i find_new_order-melding => alle andre kan oppdatere.
       // Husk "problem" med at assign bare tar de som allerede finnes, så
       // må ha en måte å slå sammen her.
 
-    case bo := <- button_outside_chan:
+    case b := <- button_chan: // INSIDE AND OUTSIDE
       //If order already exists (legg til funksjon i order_matrix), sett
       // legg ny order inn midlertidig plass til får melding fra network om alene
       // Eller: Kan jo sende til NW, få tilbake, så legge til hvis
       // ikke alene. Legge til uansett hvis indre.
-      Add_order(orders, bo.floor, ID, bo.button_dir)
+      if b.Button_dir == BUTTON_COMMAND {
+        Add_order(orders, b.Floor, ID, b.Button_dir) // Inside order
+      } else if len(alive_lifts) > 1 {
+        Add_order(orders, b.Floor, ID, b.Button_dir) // Outside order
+      }
       //Send melding ut til NW på adm_transmit_chan
 
       if Get_state(properties, ID) == IDLE {
