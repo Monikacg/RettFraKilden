@@ -14,9 +14,9 @@ func Calculate_order(orders[][]int, ID int, properties[]int, alive_lifts []int) 
 }
 
 func get_new_direction(ID int, properties[]int, dest int) int {
-	if dest - properties[3*ID] > 0 { // properties[3*ID] er last_floor. Endre til 2*ID hvis State tas bort
+	if dest - Get_last_floor(properties, ID) > 0 { // properties[3*ID] er last_floor. Endre til 2*ID hvis State tas bort
 		return DIRN_UP
-	} else if dest - properties[3*ID] < 0 {
+	} else if dest - Get_last_floor(properties, ID) < 0 {
 		return DIRN_DOWN
 	} else {
 		return DIRN_STOP

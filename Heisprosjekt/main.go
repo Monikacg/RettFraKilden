@@ -12,10 +12,10 @@ import (
 func main() {
 	// Alle skal kanskje ikke ha int, kanskje endre til struct på noen (U/I 1/2/3)
 	button_inside_chan := make(chan int, 100)
-	button_outside_chan := make(chan button, 100) //En kan være n+1?
+	button_outside_chan := make(chan Button, 100) //En kan være n+1?
 	floor_sensor_chan := make(chan int, 100)
 
-	local_order_chan := make(chan order, 100)
+	local_order_chan := make(chan Order, 100)
 
 	adm_transmit_chan := make(chan int, 100)
 	adm_receive_chan := make(chan int, 100)
@@ -23,7 +23,6 @@ func main() {
 
 	start_timer_chan := make(chan string, 100)
 	time_out_chan := make(chan string, 100)
-	interrupt_timer_chan := make(chan string, 100)
 
 	Elev_init()
 

@@ -1,83 +1,73 @@
 package lift_control
 
 import (
-  "./driver"
-  "github.com/Arktoz/Sanntid/Heisprosjekt/definitions.go"
+  . "./../driver"
+  . "./../definitions"
 )
 
-func lift_control_init(button_inside_chan chan<- int, floor_sensor_chan chan<- int,
-  button_outside_chan chan<- button, local_order_chan <-chan order)  {
+func Lift_control_init(button_chan chan<- Button, floor_sensor_chan chan<- int,
+   local_order_chan <-chan Order)  {
 
-  go lift_control(button_inside_chan, button_outside_chan,
-    floor_sensor_chan, local_order_chan)
+   go isanythinghappening(button_chan, floor_sensor_chan) // Trenger nytt navn
+
+   //Her har msg fra adm 4 deler: ordercat, order, floor, value (on/off). kanskje endre
+   // ordercat siden ordertype ser ut som gjør noe merkelig.
+   go checking_for_orders_from_admin(local_order_chan)
 }
 
-
-func lift_control(button_inside_chan chan<- int, floor_sensor_chan chan<- int,
-  button_outside_chan chan<- button, local_order_chan <-chan order)  {
-
-  go isanythinghappening(button_inside_chan, floor_sensor_chan,
-    button_outside_chan) // Trenger nytt navn
-
-  //Her har msg fra adm 4 deler: ordercat, order, floor, value (on/off). kanskje endre
-  // ordercat siden ordertype ser ut som gjør noe merkelig.
-  go checking_for_orders_from_admin(local_order_chan)
-}
-
-func checking_for_orders_from_admin(local_order_chan <-chan order)  { // Nytt navn
+func checking_for_orders_from_admin(local_order_chan <-chan Order)  { // Nytt navn
   for {
     select{
       case msg := <- local_order_chan:
-        if msg.cat == "LIGHT" {
-          if msg.order == "DOOR" {
-            driver.Elev_set_door_open_lamp(msg.value)
+        if msg.Cat == "LIGHT" {
+          if msg.Order == "DOOR" {
+            Elev_set_door_open_lamp(msg.Value)
           } else {
-            driver.Elev_set_button_lamp(msg.order, msg.floor, msg.value)
+            Elev_set_button_lamp(msg.Order, msg.Floor, msg.Value)
           }
-        } else if msg.cat == "DIRN" {
-          if msg.order == DIRN_STOP {
-            driver.Elev_set_motor_direction(DIRN_STOP)
-            driver.Elev_set_door_open_lamp(ON)
+        } else if msg.Cat == "DIRN" {
+          if msg.Order == DIRN_STOP {
+            Elev_set_motor_direction(DIRN_STOP)
+            Elev_set_door_open_lamp(ON)
           } else {
-            driver.Elev_set_motor_direction(msg.order)
+            Elev_set_motor_direction(msg.Order)
           }
         }
     }
   }
 }
 
-func isanythinghappening(button_inside_chan chan<- int, floor_sensor_chan chan<- int,
-  button_outside_chan chan<- button)  {
+func isanythinghappening(button_chan chan<- Button, floor_sensor_chan chan<- int)  {
   for {
-    outside_button_pressed(button_outside_chan)
-    inside_button_pressed(button_inside_chan)
+    inside_button_pressed(button_chan)
+    outside_button_pressed(button_chan)
     floor_sensor_triggered(floor_sensor_chan)
     time.Sleep(150*time.Millisecond)
   }
 }
 
-func outside_button_pressed(button_outside_chan chan<- button) int {
+func outside_button_pressed(button_chan chan<- Button) int {
   for floor := 0; floor < N_FLOORS; floor++ {
-    if driver.Elev_get_button_signal(BUTTON_CALL_UP, floor) {
-      button_outside_chan <- button{floor, BUTTON_CALL_UP}
+    if Elev_get_button_signal(BUTTON_CALL_UP, floor) {
+      button_chan <- Button{floor, BUTTON_CALL_UP}
     }
-    if driver.Elev_get_button_signal(BUTTON_CALL_DOWN, floor) {
-      button_outside_chan <- button{floor, BUTTON_CALL_DOWN}
+    if Elev_get_button_signal(BUTTON_CALL_DOWN, floor) {
+      button_chan <- Button{floor, BUTTON_CALL_DOWN}
     }
   }
 }
 
-func inside_button_pressed(button_inside_chan chan<- int) int {
+func inside_button_pressed(button_chan chan<- Button) int {
   for floor := 0; floor < N_FLOORS; floor++ {
-    if driver.Elev_get_button_signal(BUTTON_COMMAND, floor) {
-      button_inside_chan <- floor
+    if Elev_get_button_signal(BUTTON_COMMAND, floor) {
+      button_chan <- Button{floor, BUTTON_COMMAND}
       // Endre "floor", se notat.txt for ekstra. (evt floor_number)
     }
   }
 }
 
 func floor_sensor_triggered(floor_sensor_chan chan<- int)  {
-  floor := driver.Elev_get_floor_sensor_signal()
+  floor := Elev_get_floor_sensor_signal()
   if floor != -1 {
     floor_sensor_chan <- floor
   }
