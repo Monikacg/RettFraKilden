@@ -2,10 +2,11 @@ package calculate_order
 
 import (
 	"fmt"
-	. "./../order_matrix"
-	. "./../lift_properties"
-	. "./../../definitions"
 	"testing"
+
+	. "./../../definitions"
+	. "./../lift_properties"
+	. "./../order_matrix"
 )
 
 func TestFn(t *testing.T) {

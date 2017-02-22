@@ -1,14 +1,27 @@
 package network
 
+import (
+	"flag"
+	"fmt"
+	"time"
+
+	. "./../definitions"
+	"./bcast"
+	"./peers"
+)
+
+/*
 import(
-	"./network/bcast"
-	"./network/localip"
-	"./network/peers"
+	"./bcast"
+	"./localip"
+	"./peers"
 	"flag"
 	"fmt"
 	"os"
 	"time"
 )
+*/
+
 /*
 serializing
 oppdater listen over heiser som er ilive :)
@@ -16,19 +29,14 @@ oppdater listen over heiser som er ilive :)
 
 //Heismodul (alle deler minus denne .go-filen) laget av github.com/klasbo.
 
-type Udp struct {
-	id int
-	message string
-	properties_struct
-}
-
 type HelloMsg struct {
 	Message string
 	Iter    int
 }
 
-func Network_init(adm_transmitt_chan <-chan udp, adm_receive_chan chan<- udp, peer_chan chan<- int){
+func Network_init(adm_transmitt_chan <-chan Udp, adm_receive_chan chan<- Udp, peer_chan chan<- int) {
 	//vet ikke helt hva som skal være her enda
+	fmt.Println(DIRN_STOP)
 }
 
 func main() {
@@ -39,14 +47,14 @@ func main() {
 	flag.Parse()
 
 	/*
-	if id == "" {
-		localIP, err := localip.LocalIP()
-		if err != nil {
-			fmt.Println(err)
-			localIP = "DISCONNECTED"
+		if id == "" {
+			localIP, err := localip.LocalIP()
+			if err != nil {
+				fmt.Println(err)
+				localIP = "DISCONNECTED"
+			}
+			id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
 		}
-		id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
-	}
 	*/
 
 	peerUpdateCh := make(chan peers.PeerUpdate)
@@ -57,7 +65,7 @@ func main() {
 	helloTx := make(chan HelloMsg)
 	helloRx := make(chan HelloMsg)
 	go bcast.Transmitter(16569, helloTx) //16569
-	go bcast.Receiver(16569, helloRx) //16569
+	go bcast.Receiver(16569, helloRx)    //16569
 
 	//Test som er gitt
 	go func() {

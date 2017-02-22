@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
-	. "driver"
-	. "lift_control"
-	. "network"
-	. "admin"
-	. "timer"
+	. "./admin"
+	. "./driver"
+	. "./lift_control"
+	. "./network"
+	. "./timer"
 )
 
 func main() {

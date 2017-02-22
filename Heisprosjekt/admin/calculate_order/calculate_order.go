@@ -5,25 +5,24 @@ import (
 	. "./../lift_properties"
 )
 
-
-func Calculate_order(orders[][]int, ID int, properties[]int, alive_lifts []int) (int, int) {
+func Calculate_order(orders [][]int, ID int, properties []int, alive_lifts []int) (int, int) {
 	var new_dirn, dest int = NOT_VALID, NOT_VALID
 	dest = find_destination(orders, ID, properties, alive_lifts) //get destination?
 	new_dirn = get_new_direction(ID, properties, dest)
 	return new_dirn, dest
 }
 
-func get_new_direction(ID int, properties[]int, dest int) int {
-	if dest - Get_last_floor(properties, ID) > 0 { // properties[3*ID] er last_floor. Endre til 2*ID hvis State tas bort
+func get_new_direction(ID int, properties []int, dest int) int {
+	if dest-Get_last_floor(properties, ID) > 0 {
 		return DIRN_UP
-	} else if dest - Get_last_floor(properties, ID) < 0 {
+	} else if dest-Get_last_floor(properties, ID) < 0 {
 		return DIRN_DOWN
 	} else {
 		return DIRN_STOP
 	}
 }
 
-func find_destination(orders[][]int, ID int, properties[]int, alive_lifts []int) int {
+func find_destination(orders [][]int, ID int, properties []int, alive_lifts []int) int {
 	dest, dest_exists := check_if_valid_destination_exists(orders, ID)
 	//^does not take care about where you are. Needs only 1 order in the system (alt, 1 floor). If not, will go from 0 to 3?
 	if dest_exists {
@@ -33,7 +32,7 @@ func find_destination(orders[][]int, ID int, properties[]int, alive_lifts []int)
 
 }
 
-func check_if_valid_destination_exists(orders[][]int, ID int) (int, bool) {
+func check_if_valid_destination_exists(orders [][]int, ID int) (int, bool) {
 	for floor := 0; floor < N_FLOORS; floor++ {
 		if orders[BUTTON_CALL_UP][floor] == ID+1 {
 			return floor, true
@@ -48,11 +47,10 @@ func check_if_valid_destination_exists(orders[][]int, ID int) (int, bool) {
 	return NOT_VALID, false
 }
 
-
-func new_destination(orders[][]int, ID int, properties[]int, alive_lifts []int) int {
+func new_destination(orders [][]int, ID int, properties []int, alive_lifts []int) int {
 	var new_dest int = NOT_VALID
 	var new_dest_exists, i_am_closest bool = false, false
- // Sjekk om skal av i samme etasje.
+	// Sjekk om skal av i samme etasje.
 	switch Get_state(properties, ID) { //Needs to know which elevators are alive
 	case DOOR_OPEN:
 
@@ -108,8 +106,8 @@ Vil bare vær 1 knapp trykket
 
 MÅ TESTES GRUNDIG
 */
-func am_i_closest_to_new_order(orders[][]int, properties[]int, alive_lifts []int, ID int) (int, bool) {
-	var closest_lift, new_dest, shortest_distance int = NOT_VALID, NOT_VALID, N_FLOORS+1
+func am_i_closest_to_new_order(orders [][]int, properties []int, alive_lifts []int, ID int) (int, bool) {
+	var closest_lift, new_dest, shortest_distance int = NOT_VALID, NOT_VALID, N_FLOORS + 1
 	var lf []int
 
 	for floor := 0; floor < N_FLOORS; floor++ {
@@ -150,16 +148,15 @@ func am_i_closest_to_new_order(orders[][]int, properties[]int, alive_lifts []int
 
 func abs(value int) int {
 	if value < 0 {
-		return value *(-1)
+		return value * (-1)
 	}
 	return value
 }
 
-
 // NB! Nå gir den prioritet til de som går ned i høyere etasje over å
 // gå ned og hente ny. Endre hvis FAT krever annet.
 func order_above(orders [][]int, properties []int, ID int) (int, bool) {
-	floor_start := Get_last_floor(properties, ID)+1
+	floor_start := Get_last_floor(properties, ID) + 1
 	if floor_start >= N_FLOORS {
 		return NOT_VALID, false
 	}
@@ -181,7 +178,7 @@ func order_above(orders [][]int, properties []int, ID int) (int, bool) {
 }
 
 func order_below(orders [][]int, properties []int, ID int) (int, bool) {
-	floor_start := Get_last_floor(properties, ID)-1
+	floor_start := Get_last_floor(properties, ID) - 1
 	if floor_start < 0 {
 		return NOT_VALID, false
 	}
@@ -224,7 +221,6 @@ func order_at_current_floor_moving(orders [][]int, properties []int, ID int) boo
 	return false
 }
 
-
 func order_at_current_floor_idle(orders [][]int, properties []int, ID int) bool {
 	floor := Get_last_floor(properties, ID)
 
@@ -240,11 +236,7 @@ func order_at_current_floor_idle(orders [][]int, properties []int, ID int) bool 
 	return false
 }
 
-
-
-
-
-func Should_stop(orders[][]int, properties []int, floor int, ID int) bool {
+func Should_stop(orders [][]int, properties []int, floor int, ID int) bool {
 	if assigned_order_exists(orders, floor, ID) {
 		return true
 	}
@@ -254,7 +246,7 @@ func Should_stop(orders[][]int, properties []int, floor int, ID int) bool {
 	return false
 }
 
-func assigned_order_exists(orders[][]int, floor int, ID int) bool {
+func assigned_order_exists(orders [][]int, floor int, ID int) bool {
 	if orders[BUTTON_CALL_UP][floor] == ID+1 {
 		return true
 	}
@@ -266,8 +258,9 @@ func assigned_order_exists(orders[][]int, floor int, ID int) bool {
 	}
 	return false
 }
+
 // Vurder om bør bruk listenotasjon istedenfor å ta inn fra lift_properties
-func unassigned_order_exists(orders[][]int, properties []int, floor int, ID int) bool {
+func unassigned_order_exists(orders [][]int, properties []int, floor int, ID int) bool {
 	switch Get_dirn(properties, ID) {
 	case DIRN_UP:
 		if orders[BUTTON_CALL_UP][floor] == 0 {
