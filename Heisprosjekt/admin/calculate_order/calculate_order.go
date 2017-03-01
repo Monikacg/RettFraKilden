@@ -8,14 +8,14 @@ import (
 func Calculate_order(orders [][]int, ID int, properties []int, alive_lifts []int) (int, int) {
 	var new_dirn, dest int = NOT_VALID, NOT_VALID
 	dest = find_destination(orders, ID, properties, alive_lifts) //get destination?
-	new_dirn = get_new_direction(ID, properties, dest)
+	new_dirn = Get_new_direction(dest, Get_last_floor(properties, ID))
 	return new_dirn, dest
 }
 
-func get_new_direction(ID int, properties []int, dest int) int {
-	if dest-Get_last_floor(properties, ID) > 0 {
+func Get_new_direction(dest int, current_floor int) int {
+	if dest-current_floor > 0 {
 		return DIRN_UP
-	} else if dest-Get_last_floor(properties, ID) < 0 {
+	} else if dest-current_floor < 0 {
 		return DIRN_DOWN
 	} else {
 		return DIRN_STOP

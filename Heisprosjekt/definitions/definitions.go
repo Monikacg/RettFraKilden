@@ -41,23 +41,31 @@ type Button struct { // Brukes på button_outside_chan. Kanskje endre til å bru
 }
 
 type Order struct { // Brukes på local_order_chan
-	Cat   string // "LIGHT"/"DIR"
-	Order int    // DIRN_DOWN/UP/STOP, BUTTON_CALL_UP/DOWN/COMMAND
-	Floor int    //0-3 (0-N_FLOORS)
-	Value int    // ON/OFF for lys, settes bare for "LIGHT"
+	Category string // "LIGHT"/"DIR"
+	Order    int    // DIRN_DOWN/UP/STOP, BUTTON_CALL_UP/DOWN/COMMAND
+	Floor    int    //0-3 (0-N_FLOORS)
+	Value    int    // ON/OFF for lys, settes bare for "LIGHT"
 } // Floor trengs ikke på doorlight, value trengs ikke på retn.
 
+/* Slett om ikke blir brukt
 type Properties_struct struct { // Brukes i get_properties. ENDRE NAVN!
 	Last_floor int
 	Dirn       int
 	State      int
 }
+*/
 
 type Udp struct {
-	id      int
-	message string
-	info    string
-	Order
+	ID        int
+	Type      string
+	Floor     int
+	ExtraInfo int // If Type == "BUTTON": type of BUTTON
+	// if Type == " NewOrder": new Destination
+}
+
+type Peer struct {
+	Change      string
+	ChangedPeer int
 }
 
 // NB! GÅ gjennom og endre til stor bokstav i koden også.
