@@ -21,19 +21,38 @@ func checking_for_orders_from_admin(local_order_chan <-chan Order) { // Nytt nav
 	for {
 		select {
 		case msg := <-local_order_chan:
-			if msg.Cat == "LIGHT" {
-				if msg.Order == "DOOR" {
-					Elev_set_door_open_lamp(msg.Value)
-				} else {
-					Elev_set_button_lamp(msg.Order, msg.Floor, msg.Value)
-				}
-			} else if msg.Cat == "DIRN" {
+			/*
+				Tidligere brukt. Ta bort om det under fungerer
+					if msg.Category == "LIGHT" {
+						if msg.Order == "DOOR" {
+							Elev_set_door_open_lamp(msg.Value)
+						} else {
+							Elev_set_button_lamp(msg.Order, msg.Floor, msg.Value)
+						}
+					} else if msg.Category == "DIRN" {
+						if msg.Order == DIRN_STOP {
+							Elev_set_motor_direction(DIRN_STOP)
+							Elev_set_door_open_lamp(ON)
+						} else {
+							Elev_set_motor_direction(msg.Order)
+						}
+					}
+			*/
+
+			switch msg.Category {
+			case "LIGHT":
+				Elev_set_button_lamp(msg.Order, msg.Floor, msg.Value)
+			case "DOOR":
+				Elev_set_door_open_lamp(msg.Value)
+			case "DIRN":
 				if msg.Order == DIRN_STOP {
 					Elev_set_motor_direction(DIRN_STOP)
 					Elev_set_door_open_lamp(ON)
 				} else {
 					Elev_set_motor_direction(msg.Order)
 				}
+			case "FLOOR_LIGHT":
+				Elev_set_floor_indicator(msg.Floor)
 			}
 		}
 	}
