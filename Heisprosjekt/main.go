@@ -10,30 +10,31 @@ import (
 
 func main() {
 	// Alle skal kanskje ikke ha int, kanskje endre til struct på noen (U/I 1/2/3)
-	button_chan := make(chan Button, 100)
-	floor_sensor_chan := make(chan int, 100)
+	buttonChan := make(chan Button, 100)
+	floorSensorChan := make(chan int, 100)
 
-	local_order_chan := make(chan Order, 100)
+	localOrderChan := make(chan Order, 100)
 
-	adm_transmit_chan := make(chan int, 100)
-	adm_receive_chan := make(chan int, 100)
-	peer_chan := make(chan int, 100)
+	adminTChan := make(chan Udp, 100)
+	adminRChan := make(chan Udp, 100)
+	backupChan := make(chan Backup, 100)
+	peerChangeChan := make(chan int, 100)
 
-	start_timer_chan := make(chan string, 100)
-	time_out_chan := make(chan string, 100)
+	startTimerChan := make(chan string, 100)
+	timeOutChan := make(chan string, 100)
 
 	//Ta inn IP som input i shell, map til ID. Send ID til NETWORK og ADMIN
 
 	Elev_init()
 
-	go Lift_control_init(button_inside_chan, button_outside_chan,
-		floor_sensor_chan, local_order_chan)
+	go Lift_control_init(buttonChan,
+		floorSensorChan, localOrderChan)
 
-	go Network_init(IDInput, adm_transmit_chan, adm_receive_chan, peer_chan)
+	go Network_init(IDInput, adminTChan, adminRChan, backupChan, peerChangeChan)
 
-	go Admin_init(IDInput, button_inside_chan, button_outside_chan, floor_sensor_chan,
-		local_order_chan, adm_transmit_chan, adm_receive_chan, peer_chan,
-		start_timer_chan, time_out_chan)
+	go Admin_init(IDInput, buttonChan, floorSensorChan,
+		localOrderChan, adminTChan, adminRChan, backupChan, peerChangeChan,
+		startTimerChan, timeOutChan)
 
-	go Timer_init(start_timer_chan, time_out_chan)
+	go Timer_init(startTimerChan, timeOutChan)
 }

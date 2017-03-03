@@ -2,6 +2,7 @@ package admin
 
 import (
 	"sort"
+	"time"
 
 	. "./../definitions"
 	. "./calculate_order"
@@ -11,18 +12,18 @@ import (
 
 // Mulig å slå sammen som interface{}?
 
-func Admin_init(IDInput int, button_chan <-chan Button, floor_sensor_chan <-chan int,
-	local_order_chan chan<- Order, adm_transmit_chan chan<- Udp, adm_receive_chan <-chan Udp, peer_chan <-chan Peer,
-	start_timer_chan chan<- string, time_out_chan <-chan string) {
+func Admin_init(IDInput int, buttonChan <-chan Button, floorSensorChan <-chan int,
+	localOrderChan chan<- Order, adminTChan chan<- Udp, adminRChan <-chan Udp, backupChan <-chan Backup, peerChangeChan <-chan Peer,
+	startTimerChan chan<- string, timeOutChan <-chan string) {
 
-	go admin(IDInput, button_chan, floor_sensor_chan,
-		local_order_chan, adm_transmit_chan, adm_receive_chan, peer_chan,
-		start_timer_chan, time_out_chan)
+	go admin(IDInput, buttonChan, floorSensorChan,
+		localOrderChan, adminTChan, adminRChan, backupChan, peerChangeChan,
+		startTimerChan, timeOutChan)
 }
 
-func admin(IDInput int, button_chan <-chan Button, floor_sensor_chan <-chan int,
-	local_order_chan chan<- Order, adm_transmit_chan chan<- Udp, adm_receive_chan <-chan Udp, peer_chan <-chan Peer,
-	start_timer_chan chan<- string, time_out_chan <-chan string) {
+func admin(IDInput int, buttonChan <-chan Button, floorSensorChan <-chan int,
+	localOrderChan chan<- Order, adminTChan chan<- Udp, adminRChan <-chan Udp, backupChan <-chan Backup, peerChangeChan <-chan Peer,
+	startTimerChan chan<- string, timeOutChan <-chan string) {
 
 	orders := Create_order_matrix()
 	properties := Create_lift_prop_list()
@@ -31,6 +32,35 @@ func admin(IDInput int, button_chan <-chan Button, floor_sensor_chan <-chan int,
 	alive_lifts := make([]int, 0, MAX_N_LIFTS)
 	alive_lifts = append(alive_lifts, ID)
 
+	// Enter init state
+	Set_state(properties, ID, IDLE)
+
+	//Spør nett om noen har orders og properties. If so, sett orders og properties lik de på nettet. If not, forsett med det samme.
+
+	// Tror det er uavhengig av hvilken state det står i for det her: Vil bare vite om vi står i en etasje.
+initLoop:
+	for {
+		select {
+		case f := <-floorSensorChan:
+			Set_last_floor(properties, ID, f)
+			localOrderChan <- Order{"FLOOR_LIGHT", NOT_VALID, f, ON}
+			Assign_orders(orders, f, ID)
+			localOrderChan <- Order{"DIRN", DIRN_STOP, NOT_VALID, ON} // Bør sikkert endre navn for å gjør den her enkler å forstå
+			startTimerChan <- "DOOR_OPEN"
+			Set_state(properties, ID, DOOR_OPEN)
+			Complete_order(orders, f, ID)
+			adminTChan <- Udp{ID, "Stopped", f, NOT_VALID}
+			break initLoop
+
+		case <-time.After(3 * time.Second):
+			Set_state(properties, ID, MOVING)
+			Set_dirn(properties, ID, DIRN_DOWN)
+			localOrderChan <- Order{"DIRN", DIRN_DOWN, NOT_VALID, NOT_VALID}
+			break initLoop
+		}
+	}
+	// Exit init state.
+
 	for {
 		select {
 		// Problem med å sende melding om button pressed ut på nettet og deretter melding fra find_new_order?
@@ -38,7 +68,7 @@ func admin(IDInput int, button_chan <-chan Button, floor_sensor_chan <-chan int,
 		// Husk "problem" med at assign bare tar de som allerede finnes, så
 		// må ha en måte å slå sammen her.
 
-		case b := <-button_chan: // INSIDE AND OUTSIDE
+		case b := <-buttonChan: // INSIDE AND OUTSIDE
 			//If order already exists (legg til funksjon i order_matrix), sett
 			// legg ny order inn midlertidig plass til får melding fra network om alene
 			// Eller: Kan jo sende til NW, få tilbake, så legge til hvis
@@ -48,19 +78,19 @@ func admin(IDInput int, button_chan <-chan Button, floor_sensor_chan <-chan int,
 			} else if len(alive_lifts) > 1 {
 				Add_order(orders, b.Floor, ID, b.Button_dir) // Outside order. Tas bare når vi vet at andre heiser eksisterer.
 			}
-			//Send melding ut til NW på adm_transmit_chan
-			adm_transmit_chan <- Udp{ID, "ButtonPressed", b.Floor, b.Button_dir}
+			//Send melding ut til NW på adminTChan
+			adminTChan <- Udp{ID, "ButtonPressed", b.Floor, b.Button_dir}
 
 			//Tanke: Legg inn noe som gjør at det ikke legges til(sendes ut på NW) hvis allerede finnes i orders.
 			/*if not in orders {
-				adm_transmit_chan <- Udp{ID, "ButtonPressed", b.Floor, b.Button_dir}
+				adminTChan <- Udp{ID, "ButtonPressed", b.Floor, b.Button_dir}
 			}*/
 
 			if Get_state(properties, ID) == IDLE {
-				find_new_order(orders, ID, properties, alive_lifts, start_timer_chan, local_order_chan, adm_transmit_chan)
+				find_new_order(orders, ID, properties, alive_lifts, startTimerChan, localOrderChan, adminTChan)
 			}
 
-		case fs := <-floor_sensor_chan:
+		case fs := <-floorSensorChan:
 			switch Get_state(properties, ID) {
 			case DOOR_OPEN:
 				//Intentionally blank, probably might as well just remove this case, right now for completeness
@@ -69,37 +99,38 @@ func admin(IDInput int, button_chan <-chan Button, floor_sensor_chan <-chan int,
 				// See DOOR_OPEN
 			case MOVING:
 				Set_last_floor(properties, ID, fs)
+				localOrderChan <- Order{"FLOOR_LIGHT", NOT_VALID, fs, ON}
 
 				if Should_stop(orders, properties, fs, ID) == true {
 					Assign_orders(orders, fs, ID) // In case du tar en som ikke var assigna.
-					//local_order_chan <-  Send "DIRN", DIRN_STOP, NOT_VALID, ON
-					local_order_chan <- Order{"DIRN", DIRN_STOP, NOT_VALID, ON}
+					//localOrderChan <-  Send "DIRN", DIRN_STOP, NOT_VALID, ON
+					localOrderChan <- Order{"DIRN", DIRN_STOP, NOT_VALID, ON}
 					Set_state(properties, ID, DOOR_OPEN)
-					start_timer_chan <- "DOOR_OPEN"
+					startTimerChan <- "DOOR_OPEN"
 					Complete_order(orders, fs, ID)
-					//Send melding ut til NW på adm_transmit_chan
+					//Send melding ut til NW på adminTChan
 					// ID, "Stoppet", etasje (DOOR_OPEN)
-					adm_transmit_chan <- Udp{ID, "Stopped", fs, NOT_VALID}
+					adminTChan <- Udp{ID, "Stopped", fs, NOT_VALID}
 				} else {
-					//Send melding ut til NW på adm_transmit_chan
+					//Send melding ut til NW på adminTChan
 					// ID, "kjørte forbi", etasje
-					adm_transmit_chan <- Udp{ID, "DrovePast", fs, NOT_VALID}
+					adminTChan <- Udp{ID, "DrovePast", fs, NOT_VALID}
 				}
 			}
 
-		case <-time_out_chan:
-			//local_order_chan <-  Send "DOOR", NOT_VALID, NOT_VALID, OFF
-			local_order_chan <- Order{"DOOR", NOT_VALID, NOT_VALID, OFF}
-			find_new_order(orders, ID, properties, alive_lifts, start_timer_chan, local_order_chan, adm_transmit_chan)
+		case <-timeOutChan:
+			//localOrderChan <-  Send "DOOR", NOT_VALID, NOT_VALID, OFF
+			localOrderChan <- Order{"DOOR", NOT_VALID, NOT_VALID, OFF}
+			find_new_order(orders, ID, properties, alive_lifts, startTimerChan, localOrderChan, adminTChan)
 
-		case m := <-adm_receive_chan:
+		case m := <-adminRChan:
 			switch m.ID {
 			case ID:
 				//Alt for egen heis
 				switch m.Type {
 				case "ButtonPressed":
 					Add_order(orders, m.Floor, m.ID, m.ExtraInfo) // Ta bort den over og la den her stå? bedre her her.
-					local_order_chan <- Order{"LIGHT", m.ExtraInfo, m.Floor, ON}
+					localOrderChan <- Order{"LIGHT", m.ExtraInfo, m.Floor, ON}
 				case "Stopped":
 					// Får ingenting tilbake fra andre her.
 				case "DrovePast":
@@ -131,7 +162,7 @@ func admin(IDInput int, button_chan <-chan Button, floor_sensor_chan <-chan int,
 				}
 			}
 
-		case peer_msg := <-peer_chan:
+		case peer_msg := <-peerChangeChan:
 			switch peer_msg.Change {
 			case "New":
 				alive_lifts = append(alive_lifts, peer_msg.ChangedPeer)
@@ -147,8 +178,8 @@ func admin(IDInput int, button_chan <-chan Button, floor_sensor_chan <-chan int,
 	}
 }
 
-func find_new_order(orders [][]int, ID int, properties []int, alive_lifts []int, start_timer_chan chan<- string,
-	local_order_chan chan<- Order, adm_transmit_chan chan<- Udp) {
+func find_new_order(orders [][]int, ID int, properties []int, alive_lifts []int, startTimerChan chan<- string,
+	localOrderChan chan<- Order, adminTChan chan<- Udp) {
 
 	new_dirn, dest := Calculate_order(orders, ID, properties, alive_lifts)
 	// Should change name on both module called from and function itself.
@@ -156,27 +187,27 @@ func find_new_order(orders [][]int, ID int, properties []int, alive_lifts []int,
 	if new_dirn == DIRN_STOP {
 		Assign_orders(orders, dest, ID) //NB! Nå lagt til ALLE på den etasjen,
 		// noe som er en forenkling som vi kunne gjøre. IKKE TESTET ENNÅ
-		//local_order_chan <-  Send "DOOR", NOT_VALID, NOT_VALID, ON
-		local_order_chan <- Order{"DOOR", NOT_VALID, NOT_VALID, ON}
+		//localOrderChan <-  Send "DOOR", NOT_VALID, NOT_VALID, ON
+		localOrderChan <- Order{"DOOR", NOT_VALID, NOT_VALID, ON}
 		Set_state(properties, ID, DOOR_OPEN)
-		start_timer_chan <- "DOOR_OPEN"
+		startTimerChan <- "DOOR_OPEN"
 		Complete_order(orders, dest, ID)
-		//Send melding ut til NW på adm_transmit_chan
+		//Send melding ut til NW på adminTChan
 		// ID, "Stoppet", etasje (DOOR_OPEN)
-		adm_transmit_chan <- Udp{ID, "Stopped", dest, NOT_VALID}
+		adminTChan <- Udp{ID, "Stopped", dest, NOT_VALID}
 	} else if new_dirn == DIRN_DOWN || new_dirn == DIRN_UP {
 		Assign_orders(orders, dest, ID)
-		//local_order_chan <-  Send "DIRN", DIRN_UP/DOWN, NOT_VALID, NOT_VALID
-		local_order_chan <- Order{"DIRN", new_dirn, NOT_VALID, NOT_VALID}
+		//localOrderChan <-  Send "DIRN", DIRN_UP/DOWN, NOT_VALID, NOT_VALID
+		localOrderChan <- Order{"DIRN", new_dirn, NOT_VALID, NOT_VALID}
 		Set_state(properties, ID, MOVING)
 		Set_dirn(properties, ID, new_dirn)
-		//Send melding ut til NW på adm_transmit_chan
+		//Send melding ut til NW på adminTChan
 		// ID, "Moving, desting (new order)", etasje
-		adm_transmit_chan <- Udp{ID, "NewOrder", dest, NOT_VALID}
+		adminTChan <- Udp{ID, "NewOrder", dest, NOT_VALID}
 	} else { // new_dirn == -2 (NOT_VALID)
 		Set_state(properties, ID, IDLE)
-		//Send melding ut til NW på adm_transmit_chan
+		//Send melding ut til NW på adminTChan
 		// ID, "IDLE", etasje
-		adm_transmit_chan <- Udp{ID, "Idle", dest, NOT_VALID}
+		adminTChan <- Udp{ID, "Idle", dest, NOT_VALID}
 	}
 }
