@@ -63,9 +63,19 @@ type Udp struct {
 	// if Type == " NewOrder": new Destination
 }
 
+type OverNetwork struct {
+	Udp
+	WhoKnowsAboutThis []int
+}
+
 type Peer struct {
 	Change      string
 	ChangedPeer int
+}
+
+type Backup struct {
+	Orders     [][]int
+	Properties []int
 }
 
 // NB! GÅ gjennom og endre til stor bokstav i koden også.
